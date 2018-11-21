@@ -1,0 +1,54 @@
+Instalacion fuera del Entorno
+-----------------------------
+1. Instalacion DevExpress
+  "C:\Documents and Settings\Propietario\Escritorio\Dev Express\DEVSetup.exe"
+2. Instalacion JVC + JVCL
+  2.1 Instalacion JVC : "C:\tmp\JVCL\jcl\install.bat"
+  2.2 Instalacion JVCL : "C:\tmp\JVCL\jvcl\install.bat"
+   
+3. Instalacion pdfDelphi
+  "Escritorio\PDF-Viewer_for_Delphi_10.exe"
+
+Instalacion por Paquetes dentro de Delphi
+-----------------------------------------
+4. Instalacion VACOMM
+  "C:\Documents and Settings\Propietario\Escritorio\Async32\async32b\vacomm7.dpk"
+
+5. Instalacion SoftVet
+ "C:\Proyecto\Componentes\Componentes4454\softvet.dpk"
+
+6. Instalacion ExportXLS
+ "C:\Documents and Settings\Propietario\Escritorio\Export XLS\SOURCE\DesExpSuitD7.dpk" //solo para compilacion
+ "C:\Documents and Settings\Propietario\Escritorio\Export XLS\SOURCE\RunExpSuitD7.dpk" // componentes
+
+7. Instalacion Tms
+   C:\Documents and Settings\Propietario\Escritorio\Tms Component Pack Pro v3.3\tmsxlsd7.dpk
+   C:\Documents and Settings\Propietario\Escritorio\Tms Component Pack Pro v3.3\TMSDED7.dpk
+   C:\Documents and Settings\Propietario\Escritorio\Tms Component Pack Pro v3.3\TMSD7.dpk
+
+8. Instalacion Encriptador
+   "C:\tmp\dcpcrypt2\DCPdelphi6.dpk"
+
+9. Componente GIS
+  "C:\tmp\SVO\SVO Delphi\Source\ESSSVO.dpk"
+
+10. Instalacion Help Huella
+ "C:\Proyecto\Componentes\componente 3\dclusr.dpk"
+
+
+11. Actualizacion del QuickReport
+  VER
+
+12. Instalacion ABComponentes
+"C:\Documents and Settings\Propietario\Mis documentos\SVN - Huella\Abbrevia\packages\B304vd70.dpk"
+
+Comentario
+----------
+* El proyecto "ExportXLS" tira un error siempre que arranca Delphi. Hay que decir q no lo cargue y 
+hay que volver a añadirlo desde dentro de Delphi (Proyect->Options->Packages->Add) y elegir el archivo
+" C:\DCU\ExpSuit\RunExpSuitD7.bpl"
+
+* Hay que tener una version del QuickReport actualizada
+
+* PathFile Generado para el proyecto: 
+C:\tmp\JVCL\jcl\source\common;C:\tmp\JVCL\jvcl\devtools\ErrLook\src;C:\Archivos de programa\Borland\Delphi7\quickrpt;C:\Documents and Settings\Propietario\Escritorio\Abbrevia\source;C:\Documents and Settings\Propietario\Escritorio\Tms Component Pack Pro v3.3;C:\DCU\PdfViewer;C:\tmp\JVCL\jvcl\run;C:\tmp\JVCL\jcl\source\windows

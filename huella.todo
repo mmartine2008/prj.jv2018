@@ -1,0 +1,25 @@
+{DONE 2 -omartin -cBASE : Agregar campo 18 meses a circ escrotal}
+{DONE 2 -omartin -cBASE : Codificar los grados de asistencia en la distocia}
+{DONE 2 -omartin -cBASE : Agregar campos peso205, peso365, peso550 en tab_animales}
+{DONE 3 -omartin -cBASE : Apodo al animal interno}
+{TODO 3 -omartin -cABM : Renombrar abmpadresexternos como abmanimalesexternos}
+{DONE 1 -omartin -cBASE : Poner el SP GET_ARBOL_GENEALOGICO}
+{DONE 1 -omartin -cBASE : Poner los servicios en el establecimiento 1}
+{DONE 1 -omartin -cBASE : Crear la tabla AUX_ANIMALES con la misma estructura que TAB_ANIMALES}
+{DONE 1 -omartin -cBASE : Crear el generador GEN_ID_AUXPADRESEXTERNOS}
+{DONE 2 -omartin -cBASE : Hacer que la clave primaria de la tabla aux_animales_externos sea id_aux y id_animal}
+{DONE 3 -omartin -cBASE : Agregar el sexo en aux_padres_externos}
+{DONE 2 -omartin -cBASE : Hacer que la clave primaria de la tabla aux_grupos sea id_aux y id_grupo}
+{DONE 2 -omartin -cBASE : Agregar el campo nombre a la tabla aux_grupos}
+{DONE 3 -omartin -cBASE : eliminar la tabla estados de lactacion reemplazar los vinculos por campos enteros}
+{DONE 3 -omartin -cBASE : agregar los tipos de evento insemin art y serv corral en el script de carga inicial}
+{DONE 2 -omartin -cBASE : crear la tabla de evento corral}
+{DONE 2 -omartin -cBASE : independizar la tabla de evento inseminacion del ingreso a servicio}
+{DONE 2 -omartin -cBASE : agregar referencia a tab_grupos desde tab_servicio}
+{DONE 2 -omartin -cBASE : agregar activo a rel_pertenece_grupo}
+{DONE 2 -omartin -cBASE : agregar el sexo en los animales externos}
+{DONE 2 -omartin -cBASE : agregar la tabla cod_tipos_sexo y vincularla a los sexos y las categorias}
+{DONE 3 -omartin -cGENERAL : hacer que los titulos de los formularios (barra de titulo) diga SoftVet + titulo}
+{DONE 3 -omartin -cGENERAL : cargar los titulos de los formularios desde la base, teniendo en cuenta el idioma}
+{DONE 3 -omartin -cBASE : pasar a mayusculas los datos de los scripts de carga}
+

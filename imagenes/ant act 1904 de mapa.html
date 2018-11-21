@@ -1,0 +1,1033 @@
+<html>
+
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=yes" />
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.21&key=AIzaSyBDMNvA1INfqL9J9g_s4vA0BuAblrQRU5U&sensor=true&libraries=geometry">
+    </script>
+
+    <script type="text/javascript">
+      var script = '<script type="text/javascript" src="http://google-maps-' +
+          'utility-library-v3.googlecode.com/svn/trunk/infobubble/src/infobubble';
+      if (document.location.search.indexOf('compiled') !== -1) {
+        script += '-compiled';
+      }
+      script += '.js"><' + '/script>';
+      document.write(script);
+    </script> 
+
+<!--    <script type="text/javascript" src="http://192.168.137.51/ejecutables/infobubble.js"></script> -->
+
+    <script type="text/javascript">
+        function manejaErrores(msg, url, l) {
+            txt = "";
+            txt += "Error: " + msg + "\n";
+            txt += "URL: " + url + "\n";
+            txt += "Línea: " + l + "\n";
+            document.form_mapa.text_error.value = txt;
+            return true
+        }
+
+        onerror = manejaErrores;
+
+
+        var map;
+        var poly;
+        var infowindow = new InfoBubble({
+            map: map,
+            shadowStyle: 1,
+            padding: 10,
+            backgroundColor: '#FFFFFF',
+            borderRadius: 16,
+            borderWidth: 2,
+            borderColor: '#000000',
+            disableAutoPan: false,
+            hideCloseButton: true
+			});
+		var infoMarker = new InfoBubble({
+            map: map,
+            shadowStyle: 1,
+            borderRadius: 10,
+            padding: 1,
+            backgroundColor: '#FFFFFF',
+            borderWidth: 2,
+			disableAutoPan: false,
+            borderColor: '#000000'
+        });
+
+        var modos = ["mNavega", "mEdita"];
+        var layers;
+        var marcas;
+        var info_poly;
+        var poly_aux;
+        var ventanainicial = new InfoBubble({
+            map: map,
+            shadowStyle: 1,
+            borderRadius: 10,
+            padding: 5,
+            backgroundColor: '#FFFFFF',
+            borderWidth: 1,
+			disableAutoPan: false,
+			hideCloseButton: false,
+            borderColor: '#000000'
+        });
+        var path = new google.maps.MVCArray;
+
+        var info_marcas;
+        var escucha;
+        var options = {};
+        var shapeCounter_ = 1000;
+        var markCounter_ = 5000;
+        var marker;
+        var modo;
+        var objeto_a_editar;
+        var tipo_objeto;
+        var puntosaux;
+        var bounds;
+        var cursordefault;
+        var imagenactual;
+        var nombreref;
+        var infoaux;
+        var imagenaux;
+		var creando;
+		var ocupado = 0;
+	
+	function HayCambio(){
+		document.form_mapa.cambios.value = "true";
+	}
+
+        function polygon_get_center(polygon) {
+            bounds = new google.maps.LatLngBounds();
+            puntosaux = polygon.getPath();
+            for (i = 0; i < puntosaux.length; i++) {
+                punto = puntosaux.getAt(i);
+                bounds.extend(punto);
+            }
+            var centro = bounds.getCenter();
+            return centro;
+        }
+
+        function get_vertex_count(polygon) {
+            puntosaux = polygon.getPath();
+            return puntosaux.length;
+        }
+
+
+        function get_vertex_index(polygon, number) {
+            puntosaux = polygon.getPath();
+            punto = puntosaux.getAt(number);
+            return punto;
+        }
+
+        function delete_vertex_index(polygon, number) {
+            puntosaux = polygon.getPath();
+            puntosaux.removeAt(number);
+        }
+
+        function path_push_point(founded_path, new_point) {
+            var aux_point;
+            for (var w = 0; w < founded_path.getLength(); w++) {
+                aux_point = founded_path.getAt(w);
+                if (aux_point.equals(new_point)) {
+                    document.form_mapa.text_error.value += 'Un punto ya existe.' + new_point + '\n';
+                    return;
+                }
+            }
+            founded_path.push(new_point);
+        }
+
+        function layers_push_poly(polygono) {
+            for (var i = 0; i < layers.length; i++) {
+                if (layers[i].id == polygono.id) {
+                    for (var j = 0; j < polygono.getPath().getLength(); j++) {
+                        var founded_path = layers[i].getPath();
+                        var new_point = polygono.getPath().getAt(j);
+                        path_push_point(founded_path, new_point);
+                    }
+                    return;
+                }
+            }
+            layers.push(polygono);
+            polygono.setMap(map);
+        }
+
+        function stopEditing() {
+            layers_push_poly(poly);
+			
+        }
+
+        function getIcon(icono) {
+            return "http://www.softhuella.com.ar/imagenes_mapa/" + icono + ".png";
+        }
+
+        function getDefaultIcon() {
+            var icon = new google.maps.Icon();
+            icon.image = "http://google.com/mapfiles/ms/micons/red.png";
+            icon.iconSize = new GSize(32, 32);
+            icon.iconAnchor = new GPoint(15, 32);
+            return icon;
+        }
+
+        function startShape(id_p, colorL, colorS, StrokeW, StrokeOp, FillOp, Nombre, Info) {
+			
+			creando = 1;
+			map.setOptions({draggableCursor: "url("+getIcon('mira')+") 16 16, auto"});
+	
+            poly = new google.maps.Polygon({
+                fillColor: colorS,
+                fillOpacity: FillOp,
+                strokeColor: colorL
+            });
+
+            poly.setMap(map);
+            shapeCounter_++;
+            var id;
+            if (id_p > -1)
+                id = id_p;
+            else
+                id = shapeCounter_;
+            poly.id = id;
+
+            var datos = new Array(id, Nombre, Info, colorL, StrokeW, StrokeOp, colorS, FillOp);
+            info_poly.push(datos);
+
+            startDrawing(poly);
+
+        }
+
+        function placeMarker(nombreref, inforef, nombreimagen) {
+            google.maps.event.clearListeners(map, 'click');
+            nombreaux = nombreref;
+            infoaux = inforef;
+            imagenaux = nombreimagen;
+            imagenactual = getIcon(nombreimagen);
+            google.maps.event.addListenerOnce(map, 'click', addReference);
+        }
+
+
+        function MostrarInfoMarker(marker, nombre, info) {
+			var textoaux = "<table>";
+            textoaux = textoaux + "<tr>NOMBRE: " + nombre + ";</tr><br>";
+            textoaux = textoaux + "<tr>INFORMACION: " + info + ";</tr><br>";
+            textoaux = textoaux + "<tr><button class=\"boton\" onclick=\"remove_mark();\">";
+            textoaux = textoaux + "<div><img src=\"http://www.softhuella.com.ar/imagenes_mapa/ico_salir.png\" align=\"center\" width=\"35\" height=\"30\" /><br>";
+            textoaux = textoaux + "Eliminar</div></button></tr>";
+            textoaux = textoaux + "</table>";
+			
+            google.maps.event.addListener(marker, 'click', function () {
+				if (!infoMarker.isOpen()) {
+					infoMarker.setContent(textoaux);
+					infoMarker.setPosition(event.latLng);
+					infoMarker.open(map, marker);
+				}
+				
+            });
+		}
+
+        function addReference(event) {
+
+            marker = new google.maps.Marker({
+                map: map,
+                position: event.latLng,
+                draggable: true,
+                icon: imagenactual
+            });
+
+            markCounter_++;
+            marker.id = markCounter_;
+
+            var datos = new Array(marker.id, nombreaux, infoaux, imagenaux);
+            info_marcas.push(datos);
+
+            stopMarker();
+            document.form_mapa.aux_id_ref.value = marker.id;
+            MostrarInfoMarker(marker, nombreaux, infoaux);
+        }
+
+        function stopMarker() {
+            var existe = 0;
+            for (ind = 0; ind < marcas.length; ind++) {
+                if (marcas[ind].id == marker.id) {
+                    return;
+                }
+            }
+            marcas.push(marker);
+        }
+
+        function crearMensajeFin(puntoInicial) {
+            var contentString = '<table border="0" align="center" cellspacing="5" class="Texto">' + '<td><strong>Para finalizar el potrero' + '<br>' + 'haga doble click o click aqu&iacute;</strong>' + '</td></table>';
+
+            ventanainicial.setContent(contentString);
+            ventanainicial.setPosition(puntoInicial);
+            ventanainicial.open(map);
+        }
+
+        function destruirMensajeFin() {
+            if (ventanainicial) {
+                ventanainicial.close();
+                ventanainicial = null;
+            }
+        }
+
+        function addPoint(event) {
+
+            path.insertAt(path.length, event.latLng);
+            if (path.length == 1) {
+                crearMensajeFin(event.latLng);
+            } else {
+                destruirMensajeFin();
+            }
+        }
+
+        function stopAddPoint(event) {
+			creando = 0;
+            google.maps.event.clearListeners(map, 'click');
+            poly.setEditable(false);
+            stopEditing();
+            map.setOptions({
+                draggableCursor: cursordefault
+            });
+			
+        }
+
+        function startDrawing(poly) {
+
+            path = new google.maps.MVCArray;
+            poly.setPaths(new google.maps.MVCArray([path]));
+            google.maps.event.addListener(map, 'click', addPoint);
+            google.maps.event.addListener(poly, 'click', function (event) {
+                if (event.vertex == 0) {
+					if (creando == 1){
+						stopAddPoint();}
+                }
+            });
+            poly.setEditable(true);
+            google.maps.event.addListener(poly, "endline", function () {
+                stopEditing();
+                document.form_mapa.aux_id.value = this.id;
+            });
+
+        }
+
+        function asignar_valores(poligono) {
+            for (n = 0; n <= info_poly.length - 1; n++) {
+                if (poligono.id == info_poly[n][0]) {
+                    poligono.setOptions({
+                        strokeColor: info_poly[n][3],
+                        strokeOpacity: info_poly[n][5],
+                        strokeWeight: info_poly[n][4],
+                        fillColor: info_poly[n][6],
+                        fillOpacity: info_poly[n][7]
+                    });
+                }
+            }
+        }
+
+        function inic_vacio() {}
+
+        function punto_existe_en_poligono(poligono, punto) {
+            var another;
+            var poligono_path = poligono.getPath();
+            for (i = 0; i < poligono_path.getLength(); i++) {
+                another = poligono_path.getAt(i);
+                if ((another.lat() == punto.lat()) && (another.lng() == punto.lng())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function inic_infobubble() {
+				for (z = 0; z < marcas.length; z++) {
+					for (w = 0; w < info_marcas.length; w++) {
+						if (marcas[z].id == info_marcas[w][0]) {
+							MostrarInfoMarker(marcas[z], info_marcas[w][1], info_marcas[w][2]);
+						}
+					}
+				}
+		}
+		
+        function inic_con_shapes(puntos_pol, puntos_mark, info_pol, info_mark) {
+
+            var textoaux = "";
+            var puntos_agregados = 0;
+            var informacion = info_pol.split("$");
+            var bounds = new google.maps.LatLngBounds();
+            for (l = 0; l <= informacion.length - 1; l++) {
+                var datos_a = informacion[l].split(";");
+                if (datos_a[0] != "") {
+                    var datos_s = new Array(parseInt(datos_a[0]), datos_a[1], datos_a[2], datos_a[3], parseFloat(datos_a[4]), parseFloat(datos_a[5]), datos_a[6], parseFloat(datos_a[7]));
+                    info_poly.push(datos_s);
+                }
+            }
+
+            var lat_lng;
+            var aux_id_poly = 1000;
+            var poligonos = puntos_pol.split("$");
+
+            for (i = 0; i <= poligonos.length - 1; i++) {
+                var puntos = poligonos[i].split("/");
+
+                poly_aux = new google.maps.Polygon([], "#000000", 2, 0.7, "#4d7d31", 0.2);
+
+
+                for (k = 0; k <= puntos.length - 1; k++) {
+                    var datos = puntos[k].split(";");
+                    var id = datos[0];
+                    var lat = datos[1];
+                    var lng = datos[2];
+
+
+
+                    if (id != "") {
+                        if (lat != undefined) {
+                            poly_aux.id = parseInt(id);
+                            if (poly_aux.id > aux_id_poly)
+                                aux_id_poly = poly_aux.id;
+                            var lL = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+                            lat_lng = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+
+                            textoaux += "";
+                            textoaux += puntos_agregados + " id: " + id + " ";
+                            textoaux += "dir: " + lat_lng + "\n";
+                            puntos_agregados++;
+                            bounds.extend(lat_lng);
+                            poly_aux.getPath().push(lat_lng);
+                        }
+                    }
+                }
+
+                asignar_valores(poly_aux);
+
+                document.form_mapa.text_info.value = textoaux;
+
+                google.maps.event.addListener(poly_aux, "click", function () {
+					if (ocupado == 0){
+					<!--    ocupado en 1 -->
+						MostrarCartel(polygon_get_center(this), this.id, "poly");
+						
+                    }
+					else {
+						<!--    hidden true informando a delphi q muestre error] -->
+						<!--    Mostrar mensaje: ERROR: NO SE PUEDE TRABAJAR EN MÁS DE UN POTRERO A LA VEZ.-->
+						    document.form_mapa.editando.value = "1";
+					}
+					
+				}
+
+                );
+                layers_push_poly(poly_aux);
+                poly_aux.setMap(map);
+            }
+            shapeCounter_ = aux_id_poly;
+            if (aux_id_poly < 1000)
+                shapeCounter_ = aux_id_poly + 1000;
+            var info_marca_todas = info_mark.split("$");
+            for (j = 0; j < info_marca_todas.length - 1; j++) {
+
+                var datos_j = info_marca_todas[j].split(";");
+                if (datos_j[0] != "")
+                    info_marcas.push(datos_j);
+            }
+
+
+            var marcas_todas = puntos_mark.split("$");
+            marcas_todas.shift();
+            var aux_id_marca = 5000;
+
+            for (h = 0; h <= marcas_todas.length - 1; h++) {
+                var coord_mark = marcas_todas[h].split(";");
+
+                var id_marca = coord_mark[0];
+                var lat_m = coord_mark[1];
+                var lng_m = coord_mark[2];
+                if (lat_m != undefined) {
+                    var img = "";
+                    for (ij = 0; ij < info_marcas.length; ij++)
+                        if (info_marcas[ij][0] == id_marca) {
+                            img = info_marcas[ij][3];
+                        }
+                    if (aux_id_marca < id_marca)
+                        aux_id_marca = id_marca;
+                    var mL = new google.maps.LatLng(parseFloat(lat_m), parseFloat(lng_m));
+                    var mark_M = new google.maps.Marker({
+                        position: mL,
+                        icon: getIcon(img),
+                        map: map,
+                        draggable: false
+                    });
+                    mark_M.id = coord_mark[0];
+                    mark_M.setMap(map);
+                    marcas.push(mark_M);
+                }
+            }
+            markCounter_ = aux_id_marca;
+
+            map.fitBounds(bounds);
+            inic_infobubble();
+			ocupado = 0;
+        }
+				
+		function inic_edicion(){
+			ocupado = 1;
+		}	
+			
+		function fin_edicion() {
+			ocupado = 0;
+			document.form_mapa.editando.value = "-1";
+		}
+		
+		function cerrar_info() {
+			infowindow.close();
+		}
+				
+        function get_contenido_poly() {
+            contenido = '';
+            contenido = contenido + "  <tr>";
+            contenido = contenido + "    <td colspan=2><table border=0 align=center style=\"background-color:#FFFFFF; border:#000000; border-width: 2px; \">";
+            contenido = contenido + "        <tr>";
+
+            contenido = contenido + "          <td width=\"85\" valign=\"bottom\"><button class=\"boton\" onclick=\"editarForma();\"><div align=\"center\"><img src=\"http://www.softhuella.com.ar/imagenes_mapa/btn_editar.png\" /><br>";
+            contenido = contenido + "      Editar Potrero </div></button></td>";
+            contenido = contenido + "          <td width=\"85\" valign=\"bottom\"><button class=\"boton\" onclick=\"agregarEvento();\"><div align=\"center\"><img src=\"http://www.softhuella.com.ar/imagenes_mapa/eventosadd.png\" /><br>";
+            contenido = contenido + "          Agregar Evento</div></button></td>";
+            contenido = contenido + "          <td width=\"85\" valign=\"bottom\"><button class=\"boton\" onclick=\"fichaPotrero();\"><div align=\"center\"><img src=\"http://www.softhuella.com.ar/imagenes_mapa/btn_ficha.png\" /><br>";
+            contenido = contenido + "          Ficha del Potrero</div></button></td>";
+            contenido = contenido + "          <td width=\"85\" valign=\"bottom\"><button class=\"boton\" onclick=\"infowindow.close();\">";
+            contenido = contenido + "          <div align=\"center\"><img src=\"http://www.softhuella.com.ar/imagenes_mapa/ico_salir.png\" width=\"46\" height=\"34\" /><br>";
+            contenido = contenido + "          Salir</div></button></td>";
+
+            contenido = contenido + "        </tr>";
+            contenido = contenido + "      </table></td>";
+            contenido = contenido + "  </tr>";
+
+            return contenido;
+        }
+
+
+        function MostrarCartel(posicion, id_objeto, tipo_ob) {
+			objeto_a_editar = id_objeto;
+            tipo_objeto = tipo_ob;
+            for (i = 0; i <= info_poly.length - 1; i++) {
+                if (objeto_a_editar == info_poly[i][0]) {
+                    var titulo = info_poly[i][1];
+                    var texto = info_poly[i][2];
+                    }
+                }
+            var contenido = "<table height=100 border=\"0\" align=\"center\" cellspacing=\"5\" class=\"Texto\">";
+
+			texto = texto.replace("&","$");
+            var informacion = texto.split("<br>");
+            if (tipo_ob == "poly") {
+                for (ind_cartel = 0;
+                    (ind_cartel < informacion.length - 1) && (informacion[ind_cartel] != "Categorias:"); ind_cartel++) {
+                    if ((informacion[ind_cartel] != "")) {
+                        var linea = informacion[ind_cartel].split(":");
+                        contenido = contenido + "  <tr>";
+                        contenido = contenido + "    <td width=140><strong>" + linea[0] + "</strong></td>";
+                        contenido = contenido + "    <td width=300>" + linea[1] + "</td>";
+                        contenido = contenido + "  </tr>";
+                    }
+                }
+                contenido = contenido + "  <tr>";
+                for (ind2_cartel = 0;
+                    (ind2_cartel < informacion.length - 1) && (informacion[ind2_cartel].indexOf("Ultimo Evento:") == -1); ind2_cartel++) {
+                    if ((informacion[ind2_cartel] != "") && (informacion[ind2_cartel] == "Categorias:")) {
+                        cont = 0;
+                        for (ind3_cartel = ind2_cartel + 1;
+                            (ind3_cartel < informacion.length - 1) && (informacion[ind3_cartel].indexOf("Ultimo Evento:") == -1); ind3_cartel++) {
+                            if (informacion[ind3_cartel] != "") {
+                                if (cont == 0) {
+                                    contenido = contenido + "    <td colspan=2><p><strong>Categorias:</strong>";
+                                    contenido = contenido + "      <table width=\"290\" border=\"1\" align=\"center\" cellspacing=\"0\" bordercolor=\"#000000\"\" class=\"Texto\">";
+                                    contenido = contenido + "        <tr>";
+                                }
+                                contenido = contenido + "    <td>" + informacion[ind3_cartel] + "</td>";
+                                if (cont == 2) {
+                                    contenido = contenido + "  </tr>";
+                                    contenido = contenido + "  <tr>";
+                                }
+                                cont++;
+                            }
+
+                        }
+                        if (cont > 0) {
+                            contenido = contenido + "  </tr>";
+                            contenido = contenido + "  </table> </td>";
+                        }
+                    }
+                }
+                contenido = contenido + "  </tr>";
+                var ult_ind = -1;
+                for (ind4_cartel = 0;
+                    (ind4_cartel < informacion.length - 1) && (informacion[ind4_cartel].indexOf("Ultimo Evento:") == -1); ind4_cartel++) {
+                    ult_ind = ind4_cartel;
+                }
+                if (ult_ind != -1) {
+                    ult_ind = ult_ind + 1;
+                    if (informacion[ult_ind] != "") {
+                        var linea = informacion[ult_ind].split("Ultimo Evento:");
+                        contenido = contenido + "  <tr>";
+                        contenido = contenido + "    <td width=146><strong>&Uacute;ltimo Evento:</strong></td>";
+                        contenido = contenido + "    <td width=200>" + linea[1] + "</td>";
+                        contenido = contenido + "  </tr>";
+						
+                    }
+                }
+            }
+
+            contenido = contenido + "  <tr>";
+            contenido = contenido + "    <td height=85 colspan=2><table border=0 align=center style=\"background-color:#CCCCCC; border:#000000; border-width: 2px;\">";
+			
+			contenido = contenido + get_contenido_poly();			
+			contenido = contenido + " </td>";
+            contenido = contenido + "        </tr>";
+
+            contenido = contenido + "</table>";
+			contenido = contenido + "</table>";
+            infowindow.setContent(contenido);
+            infowindow.setPosition(posicion);
+            infowindow.open(map);
+			contenido = contenido.replace("$","&");
+		}
+
+		function MostrarCartelDirecto(idpotrero){
+			if (ocupado == 0) {
+				for (h = 0; h <= layers.length - 1; h++) {
+					if (layers[h].id == idpotrero){
+						var poligonopos = polygon_get_center(layers[h]);
+						MostrarCartel(poligonopos, idpotrero, "poly");
+					}
+				}
+			}
+		}
+
+        function agregarEvento() {
+            for (i = 0; i < layers.length; i++)
+                if (layers[i].id == objeto_a_editar) {
+                    document.form_mapa.id_poly_eve.value = objeto_a_editar;
+                    infowindow.close();
+                    }
+        }
+
+        function fichaPotrero() {
+            for (i = 0; i < layers.length; i++)
+                if (layers[i].id == objeto_a_editar) {
+                    document.form_mapa.id_poly_ficha.value = objeto_a_editar;
+                    infowindow.close();
+                    }
+        }
+
+        function editarForma() {
+                for (i = 0; i < layers.length; i++)
+                    if (layers[i].id == objeto_a_editar) {
+
+                        document.form_mapa.info_poly_pe.value = objeto_a_editar;
+                        document.form_mapa.aux_id.value = objeto_a_editar;
+                        layers[i].setEditable(true);
+                        google.maps.event.addListener(layers[i], "click", function () {
+                            document.form_mapa.aux_id.value = this.id;
+                        });
+                        infowindow.close();
+                    }
+        }
+
+
+        function SetModoEdita() {
+            modo = modos[2];
+            for (i = 0; i <= layers.length - 1; i++) {
+
+                layers[i].setEditable(true);
+                layers[i].setEditable(false);
+                google.maps.event.addListener(layers[i], "click", function () {
+                    document.form_mapa.aux_id.value = this.id;
+                });
+
+            }
+            for (k = 0; k <= marcas.length - 1; k++) {
+                marcas[k].setDraggable(true);
+                google.maps.event.addListener(marcas[k], "click", function () {
+                    document.form_mapa.aux_id_ref.value = this.id;
+                });
+            }
+        }
+
+        function AddListenerMarcar() {
+            poly = new google.maps.Polygon(polyOptions);
+            poly.setMap(map);
+            escucha = google.maps.event.addListener(map, 'click', addLatLng);
+        }
+
+        function showAddress(address) {
+            geocoder.geocode({
+                'address': address
+            }, function (results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    map.setCenter(results[0].geometry.location);
+                    map.setZoom(13);
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location
+                    });
+                } else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        }
+
+        function RemListenerMarcar() {
+            google.maps.event.removeListener(escucha);
+        }
+
+        function seleccion(id) {  
+			if (ocupado == 0) {
+				for (indice = 0; indice < layers.length; indice++)
+					if (id == layers[indice].id)
+						var latlng_a = polygon_get_center(layers[indice]);
+				for (indice_2 = 0; indice_2 < info_poly.length; indice_2++)
+					if (id == info_poly[indice_2][0]) {
+						MostrarCartel(latlng_a, id, "poly");
+					}
+			}
+		}
+
+        function seleccion_marca(id) {
+            for (indice = 0; indice < marcas.length; indice++)
+                if (id == marcas[indice].id){
+                    var latlng_a = marcas[indice].getPosition();
+					}
+        }
+
+
+        function act_shape(id, colorS, colorL, StrokeW, StrokeOp, FillOp, Nombre, Info) {
+            for (indice_2 = 0; indice_2 < info_poly.length; indice_2++) {
+                if (id == info_poly[indice_2][0]) {
+                    var Datos_aux = new Array(id, Nombre, Info, colorL, StrokeW, StrokeOp, colorS, FillOp);
+                    info_poly[indice_2] = Datos_aux;
+                }
+            }
+            for (indice = 0; indice < layers.length; indice++) {
+                if (id == layers[indice].id) {
+                    layers[indice].setOptions({
+                        fillColor: colorS,
+                        strokeColor: colorL,
+                        strokeWeight: StrokeW,
+                        strokeOpacity: StrokeOp,
+                        fillOpacity: FillOp
+                    });
+                }
+            }
+        }
+
+        function act_infoEve(id, Info) {
+            for (indice1 = 0; indice1 < info_poly.length; indice1++) {
+                if (id == info_poly[indice1][0]) {
+                    info_poly[indice1][2] = Info;
+                }
+            }
+            infowindow.close();
+        }
+
+        function act_referencias(id, Nombre, Info, Imagen) {
+            for (indice = 0; indice < marcas.length; indice++)
+                if (marcas[indice].id == id) {
+                    marcas[indice].setImage("http://www.softhuella.com.ar/imagenes_mapa/" + Imagen + ".png");
+
+                }
+            for (indice_2 = 0; indice_2 < info_marcas.length; indice_2++)
+                if (info_marcas[indice_2][0] == id) {
+                    var Datos_aux = new Array(id, Nombre, Info, Imagen);
+                    info_marcas[indice_2] = Datos_aux;
+                }
+        }
+
+        function remove_shape(id) {
+            for (indice = 0; indice < layers.length; indice++) {
+                if (layers[indice].id == id) {
+                    layers[indice].setMap(null);
+                    layers.splice(indice, 1);
+                }
+            }
+            for (indice_2 = 0; indice_2 < info_poly.length; indice_2++) {
+                if (info_poly[indice_2][0] == id) {
+                    info_poly.splice(indice_2, 1);
+                }
+            }			
+        }
+
+        function obtenerArea(id) {
+            for (indice = 0; indice < layers.length; indice++) {
+                if (layers[indice].id == id) {
+                    computed_area = google.maps.geometry.spherical.computeArea(layers[indice].getPath());
+                    document.form_mapa.area_poly.value = computed_area;
+                }
+            }
+        }
+
+        function remove_mark() {
+            for (indice = 0; indice < marcas.length; indice++) {
+                if (marcas[indice].getPosition() == infoMarker.getPosition()) {
+                    var idout = marcas[indice].id;
+                    marcas[indice].setMap(null);
+                    marcas.splice(indice, 1);
+                    infoMarker.close();
+					HayCambio();
+                }
+            }
+            for (indice_2 = 0; indice_2 < info_marcas.length; indice_2++) {
+                if (info_marcas[indice_2][0] == idout) {
+                    info_marcas.splice(indice_2, 1);
+                }
+            }
+        }
+
+
+        function mostrar_ref(id) {
+            for (indice = 0; indice < marcas.length; indice++) {
+                if (marcas[indice].id == id) {
+                    marcas[indice].setVisible(true);
+                }
+            }
+        }
+
+
+        function ocultar_ref(id) {
+            for (indice = 0; indice < marcas.length; indice++) {
+                if (marcas[indice].id == id) {
+                    marcas[indice].setVisible(false);
+                }
+            }
+        }
+
+        function mostrar_poly(id) {
+            for (indice = 0; indice < layers.length; indice++) {
+                if (layers[indice].id == id) {
+                    layers[indice].setVisible(true);
+                }
+            }
+        }
+
+        function ocultar_poly(id) {
+            for (indice = 0; indice < layers.length; indice++) {
+                if (layers[indice].id == id) {
+                    layers[indice].setVisible(false);
+                }
+            }
+        }
+
+        function clear_value_poly_eve() {
+            document.form_mapa.id_poly_eve.value = "-1";
+        }
+
+        function clear_value_poly_ficha() {
+            document.form_mapa.id_poly_ficha.value = "-1";
+        }
+
+        function clear_value() {
+            document.form_mapa.aux_id.value = "-1";
+            document.form_mapa.info_poly_pe.value = "-1";
+        }
+
+        function clear_ref() {
+            document.form_mapa.aux_id_ref.value = "-1";
+            document.form_mapa.info_marca_pe.value = "-1";
+        }
+
+        function disable_edit_poly() {
+            for (indice = 0; indice < layers.length; indice++) {
+                layers[indice].setEditable(false);
+                google.maps.event.removeListener(layers[indice]);
+            }
+        }
+
+        function enable_edit_poly() {
+            for (indice = 0; indice < layers.length; indice++) {
+                layers[indice].setEditable(true);
+            }
+        }
+
+
+        function act_indices(ind_nuevo, ind_anterior) {
+            for (ind = 0; ind < layers.length; ind++) {
+                if (layers[ind].id == ind_anterior)
+                    layers[ind].id = ind_nuevo;
+            }
+            for (ind2 = 0; ind2 < info_poly.length; ind2++) {
+                if (info_poly[ind2][0] == ind_anterior)
+                    info_poly[ind2][0] = ind_nuevo;
+            }
+            document.form_mapa.aux_id.value = ind_nuevo;
+        }
+
+
+        function deshacerUltimoPunto(id) {
+            var existe = false;
+            for (ind = 0; ind < layers.length; ind++) {
+                if (layers[ind].id == id) {
+                    existe = true;
+                    layers[ind].getPath().pop();
+                }
+            }
+            if (existe == false) {
+                if (id == poly.id) {
+                    poly.getPath().pop();
+                }
+            }
+        }
+
+        function Clickheretoprint() {
+            var disp_setting = "toolbar=yes,location=no,directories=yes,menubar=yes,";
+            disp_setting += "scrollbars=yes,width=650, height=600, left=100, top=25";
+            var content_vlue = document.getElementById("map_canvas").innerHTML;
+            var docprint = window.open("", "", disp_setting);
+            docprint.document.open();
+            docprint.document.write('<html><head><title>Inel Power System</title>');
+            docprint.document.write('</head><body onLoad="window.print();window.close()"><center>');
+
+            docprint.document.write(content_vlue);
+            docprint.document.write('</center></body></html>');
+
+            docprint.document.close();
+            docprint.focus();
+        }
+
+        function test() {
+		}
+
+        function onfinalize() {
+
+            layers = new Array();
+            marcas = new Array();
+            info_poly = new Array();
+            info_marcas = new Array();
+            poly_aux = new Array();
+            shapeCounter_ = 1000;
+            markCounter_ = 5000;
+			creando = 0;
+            cursordefault = document.getElementById("map_canvas").draggableCursor;
+            geocoder = new google.maps.Geocoder();
+
+            mapOptions = {
+                center: new google.maps.LatLng(-34.397, -65.654297),
+                zoom: 4,
+                mapTypeId: google.maps.MapTypeId.HYBRID
+            };
+
+            map.setOptions(mapOptions);
+
+            document.form_mapa.mapa_finalizado.value = "true";
+			
+
+        }
+
+        function initialize() {
+            map = new google.maps.Map(document.getElementById("map_canvas"));
+            google.maps.event.addListenerOnce(map, 'idle',
+                function () {
+                    onfinalize();
+                    test();
+                }
+            );
+        }
+
+        function SetModoNavega() {
+            infowindow.close();
+            modo = modos[1];
+            var p = "";
+            var p_i = "";
+
+            for (l = 0; l <= info_poly.length - 1; l++) {
+                p_i = p_i + info_poly[l][0] + ";" + info_poly[l][1] + ";" + info_poly[l][2] + ";" + info_poly[l][3] + ";" + info_poly[l][4] + ";" + info_poly[l][5] + ";" + info_poly[l][6] + ";" + info_poly[l][7] + ";$";
+            }
+            document.form_mapa.info_coord.value = p_i;
+
+            for (i = 0; i <= layers.length - 1; i++) {
+                var p_aux = layers[i];
+                layers[i].setEditable(false);
+				google.maps.event.addListener(layers[i], "click", function () {
+                    if (ocupado == 0) {
+						for (i = 0; i <= info_poly.length - 1; i++)
+							if (this.id == info_poly[i][0]) {
+								MostrarCartel(polygon_get_center(this), this.id, "poly");
+							}
+					}		
+                });
+                for (k = 0; k <= get_vertex_count(p_aux) - 1; k++) {
+                    p = p + layers[i].id + ";" + get_vertex_index(p_aux, k).lat() + ";" + get_vertex_index(p_aux, k).lng() + ";/";
+                }
+
+
+            }
+
+            for (h = 0; h <= marcas.length - 1; h++) {
+                var m_aux = marcas[h];
+                marcas[h].setDraggable(false);
+
+                p = p + m_aux.id + ";" + m_aux.getPosition().lat() + ";" + m_aux.getPosition().lng() + ";/";
+            }
+            document.form_mapa.coordenadas.value = p;
+
+            var pj = "";
+            for (j = 0; j < info_marcas.length; j++)
+                pj = pj + info_marcas[j][0] + ";" + info_marcas[j][1] + ";" + info_marcas[j][2] + ";" + info_marcas[j][3] + ";$";
+            document.form_mapa.info_marca.value = pj;
+
+            document.form_mapa.setModoNavega_finalizado.value = "true";			
+
+        }
+		
+	
+    </script>
+
+</head>
+<style type="text/css">
+    body {
+        background-color: #000000;
+        text-align: center;
+    }
+    .boton {
+        width: 75px;
+        color: #000000;
+        background-color: transparent;
+        border: 0px;
+        font-family: Arial;
+        font-weight: bold;
+        cursor: hand;
+    }
+    .boton:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .Texto {
+        font-family: Arial;
+        font-size: 13px;
+    }
+</style>
+
+<body onload="initialize()">
+    <div>
+        <div id="map_canvas" style="float:left; width: 100%; height: 100%"></div>
+        <div style="clear:both">
+
+
+            <form name=form_mapa>
+
+                <input type="hidden" name="coordenadas" value="" />
+                <input type="hidden" name="info_coord" value="" />
+                <input type="hidden" name="aux_id" value="-1" />
+                <input type="hidden" name="aux_id_ref" value="-1" />
+                <input type="hidden" name="info_marca" value="" />
+                <input type="hidden" name="info_marca_pe" value="-1" />
+                <input type="hidden" name="info_poly_pe" value="-1" />
+                <input type="hidden" name="area_poly" value="-1" />
+                <input type="hidden" name="id_poly_eve" value="-1" />
+                <input type="hidden" name="id_poly_ficha" value="-1" />
+                <input type="hidden" name="text_info" value="-1" />
+                <input type="hidden" name="text_error" value="-1" />
+                <input type="hidden" name="mapa_finalizado" value="false" />
+                <input type="hidden" name="setModoNavega_finalizado" value="false" />
+				<input type="hidden" name="cambios" value="false" />
+				<input type="hidden" name="editando" value="-1" />
+            </form>
+        </div>
+</body>
+
+</html>

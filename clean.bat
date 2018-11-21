@@ -1,0 +1,15 @@
+del /s *.ddp
+del /s *.dcu
+del /s *.~*
+del /s *.1
+del /s *.2
+del /s *.3
+del /s *.4
+del /s *.5
+del /s *.6
+del /s *.7
+del /s *.8
+del /s *.9
+del /s *.10
+del /s *.11
+del /s *.12

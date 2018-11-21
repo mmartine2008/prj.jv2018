@@ -1,0 +1,8 @@
+Raiz del proyecto Delphi
+     Contiene los archivos Delphi relacionados al proyecto
+     Archivos .dpr
+
+NO CONTIENE el archivo softvet.dsk, ya que ahi se encuentra la configuracion del desktop local,
+y esto es particular para cada cliente
+
+Contiene las subcarpetas del proyecto, fuentes, objetos, etc
