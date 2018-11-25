@@ -29,7 +29,9 @@ type TLectorElectronico=class
   protected
     _arrcomandosLector: arregloString;
     _arrcaravanasLeidas: arregloString;
-
+  public
+    procesarLecturasIndividuales: boolean;
+    
     procedure VaCommRxChar(Sender: TObject; Count: Integer); virtual;
   public
     function getLectura():string; virtual;
@@ -70,7 +72,11 @@ type TLectorElectronico=class
     function WriteTextVAComm(Const s:String): Boolean;
 
     function Limpiar(caravana: String): String;
+
     function esUltraRFIG: boolean;  virtual ;
+    function tieneLecturas: boolean; virtual;
+
+
 end;
 
 implementation
@@ -101,6 +107,8 @@ begin
     _vacomm.OnRxChar:= VaCommRxChar;
     AbiertoVacomm:= false;
     Lectura:= '';
+
+    procesarLecturasIndividuales := true;
 end;
 //****************************************************************************\\
 procedure TLectorElectronico.InicializarLectorElectronico(Btooth: Boolean;
@@ -288,7 +296,13 @@ begin
     Limpiar := auxlectura;
 end;
 
-    function TLectorElectronico.esUltraRFIG: boolean;  
+    function TLectorElectronico.esUltraRFIG: boolean;
+    begin
+        result := false;
+    end;
+
+    // Esta funcion solo tiene sentido en el ULtraRFID.
+    function TLectorElectronico.tieneLecturas: boolean;
     begin
         result := false;
     end;

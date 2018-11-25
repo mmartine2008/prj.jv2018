@@ -1,10 +1,13 @@
 unit uLectorUHFRfid;
 interface
 
-uses ULectorElectronico;
+uses ULectorElectronico,classes;
 
-type TLectoUHFrfid=class( TLectorElectronico )
-protected
+type TLectorUHFrfid=class( TLectorElectronico )
+  public
+
+    listaDeAnimalesPorGuardar , listadeAnimalesLeidos : TStringList;
+  protected
     _lectura: String; //ultima lectura del dispositivo
 
   public
@@ -16,17 +19,18 @@ protected
     function existeCaravanaLeida(caravana: String):boolean;
     function esCaravana(caravana: String):boolean;
 
-
     procedure ConfigurarVaComm();virtual;
 //    function OpenVAComm: Integer;         virtual;
 //    function CloseVAComm: Integer;        virtual;
     function getLectura():string;   override ;
     function esUltraRFIG: boolean;  override ;
+    function tieneLecturas: boolean; override;
+
 end;
 
 implementation
 
-uses SysUtils, UPrincipal,Forms,Registry, windows,dialogs,classes;
+uses SysUtils, UPrincipal,Forms,Registry, windows,dialogs;
 
 type
 
@@ -63,49 +67,46 @@ var
 
   firstRead : boolean = false;
 
-  listaDeAnimalesPorGuardar , listadeAnimalesLeidos : TStringList;
-{ TLectoUHFrfid }
-   function TLectoUHFrfid.getLectura():string;
+
+
+
+  
+{ TLectorUHFrfid }
+   function TLectorUHFrfid.getLectura():string;
   var
           str , caravana : string;
           strL : TStringList;
           i: integer;
    begin
-
-   // Abre el puerto para recibir
- try
-   if assigned(@openFromNetwork)  then
-   begin
-       if not firstRead then
-       begin
-         firstRead := true;
-     // BUG - Setear el puerto desde archivo
-         if (openFromNetwork(  '192.168.1.10') = 0 ) then
-         begin
-              startReading();
-         end
-        else
-        begin
-         showMessage(getError() );
-         end
-     end;
-   end
-   else
-   begin
-        showMessage( 'UHRFID DLL : No pudo encontrar la Funcion openFromNetwork');
-   end;
- except
-  on e:exception do
-      showMessage( 'UHRFID DLL ' + e.Message );
- end;
-
+      try
+		if assigned(@openFromNetwork)  then
+		begin
+			if not firstRead then
+			begin
+				firstRead := true;
+				// BUG - Setear el puerto desde archivo
+				if (openFromNetwork(  '192.168.1.10') = 0 ) then
+				begin
+					startReading();
+				end
+				else
+				begin
+					showMessage(getError() );
+				end
+			end;
+		end
+		else
+		begin
+			showMessage( 'UHRFID DLL : No pudo encontrar la Funcion openFromNetwork');
+		end;
+	except
+	on e:exception do
+	  showMessage( 'UHRFID DLL ' + e.Message );
+	end;
 
       IF  getSensorsFoundCount() > 0 THEN
       begin
-
        strL :=  TStringList.Create();
-
-
        for i :=0 to  getSensorsFoundCount()-1 do
        begin
           str := getSensorDetail(i);
@@ -134,7 +135,7 @@ var
         result := '';
    end;
 //****************************************************************************\\
-constructor TLectoUHFrfid.Create;
+constructor TLectorUHFrfid.Create;
 begin
     inherited Create();
 
@@ -143,24 +144,24 @@ begin
     listaDeAnimalesPorGuardar := TStringList.create;
     listadeAnimalesLeidos := TStringList.create;
 end;
-procedure TLectoUHFrfid.ConfigurarVaComm();
+procedure TLectorUHFrfid.ConfigurarVaComm();
 begin
 end;
 {
-function TLectoUHFrfid.OpenVAComm: Integer;
+function TLectorUHFrfid.OpenVAComm: Integer;
 begin
     result:= 1;
     AbiertoVacomm:= true;
 end;
 
-function TLectoUHFrfid.CloseVAComm: Integer;
+function TLectorUHFrfid.CloseVAComm: Integer;
 begin
     result:= 1;
 end;
  }
 //****************************************************************************\\
 
-procedure TLectoUHFrfid.Inicializar;
+procedure TLectorUHFrfid.Inicializar;
 var
  s : string;
 begin
@@ -188,7 +189,7 @@ end;
 
 
 //****************************************************************************\\
-procedure TLectoUHFrfid.agregarCaravanaLeida(caravana: String);
+procedure TLectorUHFrfid.agregarCaravanaLeida(caravana: String);
 var
   size: integer;
 begin
@@ -198,7 +199,7 @@ begin
 
 end;
 
-function TLectoUHFrfid.existeCaravanaLeida(caravana: String):boolean;
+function TLectorUHFrfid.existeCaravanaLeida(caravana: String):boolean;
 var
   i : integer;
   enc : boolean;
@@ -217,21 +218,34 @@ end;
 
 
 //****************************************************************************\\
-function TLectoUHFrfid.formatearCaravana(caravana: String): String;
+function TLectorUHFrfid.formatearCaravana(caravana: String): String;
 var i:Integer;
     aux,aux2:String;
 begin
  result := caravana;
 end;
 
-function TLectoUHFrfid.esCaravana(caravana: String):boolean;
+function TLectorUHFrfid.esCaravana(caravana: String):boolean;
 begin
   result := true;
 end;
 
-function TLectoUHFrfid.esUltraRFIG: boolean;
+function TLectorUHFrfid.esUltraRFIG: boolean;
 begin
      result := true;
+end;
+
+function TLectorUHFrfid.tieneLecturas: boolean;
+begin
+  if (getSensorsFoundCount() > 0) then
+  begin
+     result := true;
+  end
+  else
+  begin
+     result := false;
+  end
+
 end;
 
 

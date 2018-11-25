@@ -416,7 +416,9 @@ uses
   UDtePreview in 'Fuentes\General\UDtePreview.pas' {FDtePreview},
   UPanelCaravanas in 'Fuentes\Reportes\UPanelCaravanas.pas' {FPanelCaravanas},
   UMensajeGuardarVincular in 'Fuentes\Lectores Electronicos\UMensajeGuardarVincular.pas' {FMensajeGuardarVincular},
-  _huella_TLB in '_huella_TLB.pas';
+  _huella_TLB in '_huella_TLB.pas',
+  ULectorShearWellData in 'Fuentes\Lectores Electronicos\ULectorShearWellData.pas',
+  uLectorUHFRfid in 'Fuentes\Lectores Electronicos\ULectorUHFRfid.pas';
 
 {$R *.TLB}
 {$R *.res}

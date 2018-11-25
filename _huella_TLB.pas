@@ -12,10 +12,10 @@ unit _huella_TLB;
 // ************************************************************************ //
 
 // PASTLWTR : 1.2
-// File generated on 14/08/2017 03:08:45 p.m. from Type Library described below.
+// File generated on 24/11/2018 05:31:16 p.m. from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\Documents and Settings\Propietario\Mis documentos\Huella\Huella_SIFTA\_huella.tlb (1)
+// Type Lib: C:\Documents and Settings\Propietario\Mis documentos\Huella\Huella_SIFTA_4_4\_huella.tlb (1)
 // LIBID: {0E8F6D0B-F3A5-4B7A-B225-95453AB759CB}
 // LCID: 0
 // Helpfile: 

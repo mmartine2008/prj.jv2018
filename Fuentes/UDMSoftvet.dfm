@@ -1,8 +1,8 @@
 object DMSoftvet: TDMSoftvet
   OldCreateOrder = False
   OnCreate = DataModuleCreate
-  Left = 6
-  Top = 1
+  Left = 407
+  Top = 165
   Height = 512
   Width = 688
   object IBQCatEve: TIBQuery

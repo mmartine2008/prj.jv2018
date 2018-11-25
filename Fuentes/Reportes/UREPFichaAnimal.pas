@@ -9478,12 +9478,14 @@ begin
   begin
     auxlectura := FLectorElectronico.Limpiar(auxlectura);
 
-    if DMSoftvet.IBQDatosAnimal.Lookup('id_ie',auxlectura,'id_animal')<>null then
+    DMSoftvet.IBQDatosAnimal.Close;
+    DMSoftvet.IBQDatosAnimal.ParamByName('establecimiento').AsInteger:= FPrincipal.EstablecimientoActual;
+    DMSoftvet.IBQDatosAnimal.Open;
+    id_aux := DMSoftvet.IBQDatosAnimal.Lookup('id_ie',auxlectura,'id_animal');
+
+    if id_aux <> null then
     begin
-      DMSoftvet.IBQDatosAnimal.Close;
-      DMSoftvet.IBQDatosAnimal.ParamByName('establecimiento').AsInteger:= FPrincipal.EstablecimientoActual;
-      DMSoftvet.IBQDatosAnimal.Open;
-      id_aux := DMSoftvet.IBQDatosAnimal.Lookup('id_ie',auxlectura,'id_animal');
+
       rpaux := DMSoftvet.IBQDatosAnimal.Lookup('id_animal',id_aux,'id_rp');
 
      Try

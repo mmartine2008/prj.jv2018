@@ -9509,7 +9509,7 @@ inherited FREPFichaAnimal: TFREPFichaAnimal
           NumGlyphs = 2
         end
         object BBGuardar: TBitBtn
-          Left = 232
+          Left = 228
           Top = 3
           Width = 81
           Height = 29
@@ -9561,7 +9561,7 @@ inherited FREPFichaAnimal: TFREPFichaAnimal
             D5CACACAECEDEDFFFFFF}
         end
         object BBCancelar: TBitBtn
-          Left = 319
+          Left = 315
           Top = 3
           Width = 80
           Height = 29

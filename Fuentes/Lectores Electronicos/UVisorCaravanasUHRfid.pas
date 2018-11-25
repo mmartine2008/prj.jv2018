@@ -1,0 +1,100 @@
+unit UVisorCaravanasUHRfid;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ULectorElectronico, uLectorUHFRfid;
+
+type
+  TFVisorCaravanasUHRfid = class(TForm)
+    GroupBox1: TGroupBox;
+    lstLeidas: TListBox;
+    Button1: TButton;
+    Button2: TButton;
+    chkIndividuales: TCheckBox;
+    procedure FormShow(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure chkIndividualesClick(Sender: TObject);
+  private
+    { Private declarations }
+    lector: TLectorUHFrfid;
+
+    procedure iniciarListas;
+    procedure cargarListas;
+    procedure vaciarListas;
+  public
+    { Public declarations }
+    procedure setLector(lector: TLectorUHFrfid);
+  end;
+
+var
+  FVisorCaravanasUHRfid: TFVisorCaravanasUHRfid;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFVisorCaravanasUHRfid.setLector(lector: TLectorUHFrfid);
+begin
+  self.lector := lector;
+  self.chkIndividuales.Checked := lector.procesarLecturasIndividuales;
+end;
+
+procedure TFVisorCaravanasUHRfid.vaciarListas;
+begin
+  self.lstLeidas.Items.Clear;
+
+  lector.listadeAnimalesLeidos.Clear;
+end;
+
+procedure TFVisorCaravanasUHRfid.iniciarListas;
+begin
+  self.lstLeidas.Items.Clear;
+
+
+end;
+
+procedure TFVisorCaravanasUHRfid.cargarListas;
+var
+  i, total: integer;
+  auxLeida: String;
+
+begin
+
+  if lector.listadeAnimalesLeidos.Count > 0 then
+  begin
+    total := lector.listadeAnimalesLeidos.Count;
+
+    for i:=0 to total do
+    begin
+      auxLeida := lector.listadeAnimalesLeidos[i];
+      self.lstLeidas.Items.Add(auxLeida);
+    end;
+  end;
+
+end;
+
+procedure TFVisorCaravanasUHRfid.FormShow(Sender: TObject);
+begin
+  iniciarListas;
+  cargarListas;
+end;
+
+procedure TFVisorCaravanasUHRfid.Button1Click(Sender: TObject);
+begin
+  vaciarListas;
+end;
+
+procedure TFVisorCaravanasUHRfid.Button2Click(Sender: TObject);
+begin
+  self.Close;
+end;
+
+procedure TFVisorCaravanasUHRfid.chkIndividualesClick(Sender: TObject);
+begin
+   lector.procesarLecturasIndividuales := self.chkIndividuales.Checked;
+end;
+
+end.

@@ -12,7 +12,7 @@ unit huella_TLB;
 // ************************************************************************ //
 
 // PASTLWTR : 1.2
-// File generated on 19/11/2018 10:14:10 p.m. from Type Library described below.
+// File generated on 24/11/2018 07:17:49 p.m. from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Documents and Settings\Propietario\Mis documentos\Huella\Huella_SIFTA_4_4\huella.tlb (1)

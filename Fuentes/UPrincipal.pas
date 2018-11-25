@@ -20,7 +20,7 @@ uses
    dximctrl, Shlobj, ActiveX, ComObj, ULectorElectronico, ULectorAllFlexSerie, ULectorShearWellData,
   JvExExtCtrls,  PngImage, JvGIF, PngImageList, OleCtrls,
   AcroPDFLib_TLB, Ayuda3, JvComponentBase, JvBalloonHint , uTiposGlobales,
-  JvImage,UMensajeGuardarVincular;
+  JvImage,UMensajeGuardarVincular, UVisorCaravanasUHRfid;
 
 
 type
@@ -921,6 +921,7 @@ type
     LCambEstab: TLabel;
     JvICambiarEstab: TJvImage;
     IBQBusca: TIBQuery;
+    BtnUHFRFID: TBitBtn;
 
     procedure ADODocTransitoElectronicoExecute(Sender: TObject);
     procedure ADOResumenMovimientosExecute(Sender: TObject);
@@ -1257,6 +1258,7 @@ type
     procedure JvIPersonalizadosClick(Sender: TObject);
     procedure JvIResMovimientosClick(Sender: TObject);
     procedure JvIDTEClick(Sender: TObject);
+    procedure BtnUHFRFIDClick(Sender: TObject);
    
     //**************************************
   public
@@ -8278,6 +8280,10 @@ begin
   begin
     auxlectura := FLectorElectronico.Limpiar(auxlectura);
     //LogMensaje('Mensaje:'+auxlectura);
+      DMSoftvet.IBQDatosAnimal.Close;
+      DMSoftvet.IBQDatosAnimal.ParamByName('establecimiento').AsInteger:= FPrincipal.EstablecimientoActual;
+      DMSoftvet.IBQDatosAnimal.Open;
+          
     if DMSoftvet.IBQDatosAnimal.Lookup('id_ie',auxlectura,'id_animal')<>null then
     begin
       DMSoftvet.IBQDatosAnimal.Close;
@@ -8326,17 +8332,34 @@ end;
 procedure TFPrincipal.TimerLectorTimer(Sender: TObject);
 begin
   inherited;
-  self.identificarAnimalPorLector;
+
+  // Siempre lo hace, salvo que sea UHRFID, en cuyo caso puede desactivarse
+  if FLectorElectronico.procesarLecturasIndividuales then
+  begin
+    self.identificarAnimalPorLector;
+  end;
+  
+  if FLectorElectronico.tieneLecturas then
+  begin
+      BtnUHFRFID.Glyph.LoadFromFile('imagenes\Herramientas\verde.bmp');
+  end
+  else
+  begin
+      BtnUHFRFID.Glyph.LoadFromFile('imagenes\Herramientas\rojo.bmp');
+  end
+
 end;
 
 procedure TFPrincipal.crearLector;
 begin
   if Self._DISPOSITIVO_MODEL = 'UHFRFID' then
   begin
-     FLectorElectronico:= TLectoUHFrfid.Create();
+     FLectorElectronico:= TLectorUHFrfid.Create();
+     BtnUHFRFID.Visible := true;
   end
   else
   begin
+    BtnUHFRFID.Visible := false;
     if Self._DISPOSITIVO_MODEL = 'Shearwell' then
     begin
       FLectorElectronico:= TLectoShearWellData.Create();//creo segun el que estamos usando
@@ -9977,6 +10000,19 @@ begin
   PAInicioMapa.Visible:= false;
   ADODocTransitoElectronico.Execute;    
 { DAIANA - 19.12.2014 - Incidencia 413 - Fin }
+end;
+
+procedure TFPrincipal.BtnUHFRFIDClick(Sender: TObject);
+var
+  F: TFVisorCaravanasUHRfid;
+begin
+  inherited;
+
+  F := TFVisorCaravanasUHRfid.Create(self);
+  F.setLector(FLectorElectronico as TLectorUHFrfid);
+  F.ShowModal;
+  F.Destroy;
+
 end;
 
 end.

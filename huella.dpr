@@ -417,7 +417,8 @@ uses
   UPanelCaravanas in 'Fuentes\Reportes\UPanelCaravanas.pas' {FPanelCaravanas},
   UMensajeGuardarVincular in 'Fuentes\Lectores Electronicos\UMensajeGuardarVincular.pas' {FMensajeGuardarVincular},
   ULectorShearWellData in 'Fuentes\Lectores Electronicos\ULectorShearWellData.pas',
-  ULectorUHFRfid in 'Fuentes\Lectores Electronicos\ULectorUHFRfid.pas';
+  ULectorUHFRfid in 'Fuentes\Lectores Electronicos\ULectorUHFRfid.pas',
+  UVisorCaravanasUHRfid in 'Fuentes\Lectores Electronicos\UVisorCaravanasUHRfid.pas' {Form3};
 
 {$R *.TLB}
 {$R *.res}
